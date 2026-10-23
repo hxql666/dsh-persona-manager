@@ -1,8 +1,8 @@
 # 发布指南（v0.1.0）
 
-> **当前状态：GitHub 已开源，npm 尚未发布。** `0.1.0` 已 push 到 `https://github.com/hxql666/dsh-persona-manager`
-> （`main` 分支 + tag `v0.1.0` + GitHub Release）。npm 侧仍待执行：
-> 需要维护者登录 npm 账号并完成（可能的）staged publishing 审批，之后按本清单继续。
+> **当前状态：已发布。** `0.1.0` 已 push 到 GitHub（`main` + tag `v0.1.0` + Release）并发布到 npm；`0.1.1` 为文档状态修正版，同样推送 GitHub 并发布 npm。
+> 发布经验：当前 npm 对 `npm publish` 走「处理队列 / 阶段性发布」，PUT 返回 **202** 后需等待几分钟才在 registry 可见；
+> 新包首次发布会附加一个 `0.0.0-stage` 占位版本；2FA 通过 npm 的 web-auth 流程完成（`npm publish` 会打印 `https://www.npmjs.com/auth/cli/<id>`）。
 
 执行任何发布动作（`npm publish`、`git push`、创建 Release）前，请先确认你（维护者）确实要对外发布。本文所有命令都在**普通 PowerShell（非管理员）**中执行。
 

@@ -4,10 +4,16 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-> **状态（2026-10-23）**：`0.1.0` 已完成并验证（83/83 tests）；**已开源到 GitHub**
-> （[v0.1.0 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.0)），**npm 尚未发布**。
+> **状态（2026-10-23）**：`0.1.0` 已完成并验证（83/83 tests），已开源到 GitHub（v0.1.0）并发布到 npm（`@hxql/dsh-persona-manager@0.1.0`）；
+> `0.1.1` 仅修正文档与发布状态，同样已推送 GitHub 并发布 npm。
 
 ## [Unreleased]
+
+## [0.1.1] - 2026-10-23
+
+### Changed
+
+- 文档与发布状态：README / README_EN 增加 npm 徽章与 npm 安装方式，状态更新为「已开源 + 已发布」；CHANGELOG、docs/PUBLISH.md、docs/VERIFY.md 同步发布记录。无代码行为变化。
 
 ## [0.1.0] - 2026-10-23
 
@@ -32,5 +38,5 @@
 
 ### Notes
 
-- 发布状态：GitHub 仓库与 `v0.1.0` Release 已发布；npm 包尚未发布（需要 npm 登录 + 2FA，并可能进入 staged publishing 审批）。
+- 发布状态：本版本是首个发布版本（GitHub `v0.1.0` Release + npm `0.1.0`）。
 - v1 非目标：斜杠命令、给模型的 persona 工具、JSON/Markdown 导入导出、工作区级人设文件、多人设叠加、SSE 实时推送。

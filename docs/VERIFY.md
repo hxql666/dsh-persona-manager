@@ -141,7 +141,15 @@ DELETE /personas/p_mvks3x6jy2ul                                  → 200 {ok:tru
 Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-20261023-174115" "$env:USERPROFILE\.dsh\AGENTS.md" -Force
 ```
 
-## 9. 未验证/限制
+## 9. 发布记录（GitHub + npm）
+
+- GitHub：`main` 分支已推送；tag `v0.1.0`（release 由 API 创建）、`v0.1.1`；Release 页面含发布说明。
+- npm：`@hxql/dsh-persona-manager@0.1.0` 与 `0.1.1` 已发布；`dist-tags.latest = 0.1.1`；首次发布附带 npm 自动生成的 `0.0.0-stage` 占位版本。
+- 发布过程：本地 CLI registry 是 `registry.npmmirror.com`，发布显式使用 `--registry=https://registry.npmjs.org`；`npm publish` 在 2FA 下返回 **202 Accepted**（registry 处理队列），约 4 分钟后 packument 可读；重试同版本会得到 403「cannot publish over the previously published versions」。
+- 发布校验：`npm view` 元数据正确、`npm pack @hxql/dsh-persona-manager@0.1.0` 可下载且 tarball 18 个文件完整。
+- 0.1.1 为文档状态修正版本（无代码行为变化）。
+
+## 10. 未验证/限制
 
 - **视觉渲染未验证**：本会话无浏览器自动化，设置页与芯片浮层的真实布局、z-index、
   主题观感、真实浏览器 fetch 控制台未见。槽位注册与组件首渲染已由 vm 冒烟测试覆盖；
