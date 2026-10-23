@@ -143,11 +143,11 @@ Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-20261023-174115" "$env:USERPROFIL
 
 ## 9. 发布记录（GitHub + npm）
 
-- GitHub：`main` 分支已推送；tag `v0.1.0`（release 由 API 创建）、`v0.1.1`；Release 页面含发布说明。
-- npm：`@hxql/dsh-persona-manager@0.1.0` 与 `0.1.1` 已发布；`dist-tags.latest = 0.1.1`；首次发布附带 npm 自动生成的 `0.0.0-stage` 占位版本。
+- GitHub：`main` 分支已推送；tag `v0.1.0`（release 由 API 创建）、`v0.1.1`、`v0.1.2`；Release 页面含发布说明。
+- npm：`@hxql/dsh-persona-manager@0.1.0`、`0.1.1`、`0.1.2` 已发布；`dist-tags.latest = 0.1.2`；首次发布附带 npm 自动生成的 `0.0.0-stage` 占位版本。
 - 发布过程：本地 CLI registry 是 `registry.npmmirror.com`，发布显式使用 `--registry=https://registry.npmjs.org`；`npm publish` 在 2FA 下返回 **202 Accepted**（registry 处理队列），约 4 分钟后 packument 可读；重试同版本会得到 403「cannot publish over the previously published versions」。
-- 发布校验：`npm view` 元数据正确、`npm pack @hxql/dsh-persona-manager@0.1.0` 可下载且 tarball 18 个文件完整。
-- 0.1.1 为文档状态修正版本（无代码行为变化）。
+- 发布校验：`npm view` 元数据正确；`npm pack` 0.1.0 / 0.1.2 均可下载，tarball 18 个文件完整；0.1.2 tarball 已含 `createTrustGuard`/`requestRejection` 代码，且 PII/密钥扫描无命中。
+- 0.1.1 为文档状态修正版本；0.1.2 为安全修复版本（提交 `c0eb498`）。
 
 ## 10. 安全修复（0.1.2）
 
