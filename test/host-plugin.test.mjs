@@ -88,7 +88,7 @@ function makeAgent(id) {
 }
 
 /** Build a fake Cordis plugin context around the optional fakes. */
-function makeHarness({ storageDomain, agents, webServer } = {}) {
+function makeHarness({ storageDomain, agents, webServer, connection } = {}) {
   const logger = makeLogger()
   const effects = []
   const listeners = new Map()
@@ -97,6 +97,7 @@ function makeHarness({ storageDomain, agents, webServer } = {}) {
   if (storageDomain !== undefined) services.set('storageDomain', storageDomain)
   if (agents !== undefined) services.set('agents', agents)
   if (webServer !== undefined) services.set('webServer', webServer)
+  if (connection !== undefined) services.set('connection', connection)
 
   const ctx = {
     logger,
@@ -187,7 +188,8 @@ test('apply() wires storage + seed + prompt injection + HTTP API end-to-end', as
   const agents = { list: () => [preexisting.agent] }
   const webServer = makeWebServer()
   const storage = makeStorageDomain()
-  const harness = makeHarness({ storageDomain: storage, agents, webServer })
+  const connection = { requestRejection: () => undefined }
+  const harness = makeHarness({ storageDomain: storage, agents, webServer, connection })
 
   await apply(harness.ctx, {})
   assert.equal(storage.record.openedSpec.name, 'persona_manager')
@@ -283,7 +285,8 @@ test('apply() still loads and injects personas when storageDomain is unavailable
 test('apply() degrades to memory when storageDomain.open() fails', async () => {
   const storage = makeStorageDomain({ failOpen: true })
   const webServer = makeWebServer()
-  const harness = makeHarness({ storageDomain: storage, webServer })
+  const connection = { requestRejection: () => undefined }
+  const harness = makeHarness({ storageDomain: storage, webServer, connection })
 
   await apply(harness.ctx, {})
   assert.ok(
@@ -316,4 +319,28 @@ test('apply() survives a domain whose close() rejects during unload', async () =
   const harness = makeHarness({ storageDomain: storage })
   await apply(harness.ctx, {})
   await assert.doesNotReject(() => harness.unload())
+})
+
+test('the API route applies the Connection request trust fence before routing', async () => {
+  const webServer = makeWebServer()
+  const storage = makeStorageDomain()
+  let rejection = 403
+  const connection = { requestRejection: () => rejection }
+  const harness = makeHarness({ storageDomain: storage, webServer, connection })
+  await apply(harness.ctx, {})
+
+  const route = webServer.routes[0]
+  const untrusted = await callRoute(route)
+  assert.equal(untrusted.status, 403)
+  assert.equal(untrusted.json.error.code, 'untrusted')
+
+  rejection = 401
+  const unauthenticated = await callRoute(route)
+  assert.equal(unauthenticated.status, 401)
+  assert.equal(unauthenticated.json.error.code, 'unauthenticated')
+
+  rejection = undefined
+  const trusted = await callRoute(route)
+  assert.equal(trusted.status, 200)
+  await harness.unload()
 })

@@ -4,10 +4,22 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-> **状态（2026-10-23）**：`0.1.0` 已完成并验证（83/83 tests），已开源到 GitHub（v0.1.0）并发布到 npm（`@hxql/dsh-persona-manager@0.1.0`）；
-> `0.1.1` 仅修正文档与发布状态，同样已推送 GitHub 并发布 npm。
+> **状态（2026-10-23）**：`0.1.0` 已完成并验证，已开源到 GitHub（v0.1.0）并发布到 npm（`@hxql/dsh-persona-manager@0.1.0`）；
+> `0.1.1` 修正文档与发布状态；`0.1.2` 为安全修复版（API 请求信任围栏），均已推送 GitHub 并发布 npm。
 
 ## [Unreleased]
+
+## [0.1.2] - 2026-10-23
+
+### Security
+
+- 修复 DNS rebinding 暴露：`/persona-manager/api` 处理前应用 DSH Connection 信任围栏（`ctx.connection.requestRejection({ headers })`）——伪造 Host/Origin 返回 403 `untrusted`，未认证请求返回 401 `unauthenticated`；Connection 不可用时退回 Host fence（仅 Web origin host / loopback host）并拒绝 `sec-fetch-site: cross-site`。
+- 新增 9 个自动化测试（围栏单元测试 + 真实 `apply()` 集成：403 / 401 / 放行三条路径）。
+
+### Changed
+
+- 文档：API 章节注明只服务浏览器页面（命令行无 Cookie 会得到 401）；本机路径改为占位符；测试计数更新为 92。
+- 仓库卫生：`.gitignore` 增加 `.npmrc`、`.env*`、`*.pem`、`*.key`、`*.crt`、`npm-debug.log*`。
 
 ## [0.1.1] - 2026-10-23
 

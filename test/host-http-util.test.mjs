@@ -14,13 +14,19 @@ import {
   HttpError,
   JSON_HEADERS,
   MAX_BODY_BYTES,
+  createTrustGuard,
   errorEnvelope,
+  hostnameOfHostHeader,
+  hostsForOrigin,
+  isLoopbackHttpHost,
   isSameOrigin,
+  normalizeRequestHost,
   parseApiPath,
   queryOf,
   readJsonBody,
   sendError,
   sendJson,
+  trustFailure,
 } from '../lib/host/http-util.js'
 
 /** @returns a fake ServerResponse that records what the handler wrote. */
@@ -185,4 +191,90 @@ test('HttpError carries the status/code pair', () => {
   assert.equal(error.status, 400)
   assert.equal(error.code, 'invalid-body')
   assert.equal(error.message, 'nope')
+})
+
+test('trustFailure builds the guard failure object', () => {
+  const failure = trustFailure(403, 'untrusted', 'nope')
+  assert.deepEqual(failure, { status: 403, code: 'untrusted', message: 'nope' })
+  assert.equal(Object.isFrozen(failure), true)
+})
+
+test('Host header helpers parse host, host:port, and [v6]:port', () => {
+  assert.equal(normalizeRequestHost('  127.0.0.1:58171 '), '127.0.0.1:58171')
+  assert.equal(normalizeRequestHost(undefined), '')
+  assert.equal(hostnameOfHostHeader('127.0.0.1:58171'), '127.0.0.1')
+  assert.equal(hostnameOfHostHeader('LOCALHOST:3080'), 'localhost')
+  assert.equal(hostnameOfHostHeader('[::1]:58171'), '::1')
+  assert.equal(hostnameOfHostHeader('localhost'), 'localhost')
+  assert.equal(hostnameOfHostHeader(''), '')
+  assert.equal(isLoopbackHttpHost('127.0.0.1:58171'), true)
+  assert.equal(isLoopbackHttpHost('localhost:58171'), true)
+  assert.equal(isLoopbackHttpHost('[::1]:58171'), true)
+  assert.equal(isLoopbackHttpHost('evil.example'), false)
+  assert.equal(isLoopbackHttpHost('127.0.0.1.evil.example'), false)
+  assert.equal(isLoopbackHttpHost(''), false)
+})
+
+test('hostsForOrigin allows the origin authority and its loopback alias', () => {
+  const v4 = hostsForOrigin('http://127.0.0.1:58171')
+  assert.equal(v4.has('127.0.0.1:58171'), true)
+  assert.equal(v4.has('localhost:58171'), true)
+  const named = hostsForOrigin('http://localhost:58171')
+  assert.equal(named.has('localhost:58171'), true)
+  assert.equal(named.has('127.0.0.1:58171'), true)
+  assert.equal(hostsForOrigin(undefined).size, 0)
+  assert.equal(hostsForOrigin('not a url').size, 0)
+})
+
+test('trust guard delegates to Connection requestRejection when available', () => {
+  const calls = []
+  const guard = createTrustGuard({
+    getConnection: () => ({
+      requestRejection(request) {
+        calls.push(request)
+        return undefined
+      },
+    }),
+  })
+  const headers = { host: '127.0.0.1:58171', cookie: 'x=1' }
+  assert.equal(guard({ headers }), undefined)
+  assert.deepEqual(calls, [{ headers }])
+
+  assert.deepEqual(
+    createTrustGuard({ getConnection: () => ({ requestRejection: () => 403 }) })({ headers }),
+    { status: 403, code: 'untrusted', message: 'request rejected by the connection trust fence' },
+  )
+  assert.deepEqual(
+    createTrustGuard({ getConnection: () => ({ requestRejection: () => 401 }) })({ headers }),
+    { status: 401, code: 'unauthenticated', message: 'an authenticated browser session is required' },
+  )
+  assert.deepEqual(
+    createTrustGuard({
+      getConnection: () => ({
+        requestRejection() {
+          throw new Error('boom')
+        },
+      }),
+    })({ headers }),
+    { status: 403, code: 'untrusted', message: 'request trust check failed' },
+  )
+})
+
+test('trust guard fallback enforces the Host fence without Connection', () => {
+  const guard = createTrustGuard({ getOrigin: () => 'http://127.0.0.1:58171' })
+  assert.equal(guard({ headers: { host: '127.0.0.1:58171' } }), undefined)
+  assert.equal(guard({ headers: { host: 'localhost:58171' } }), undefined)
+  assert.equal(guard({ headers: { host: 'evil.example' } })?.status, 403)
+  assert.equal(guard({ headers: {} })?.status, 403)
+  assert.equal(
+    guard({ headers: { host: '127.0.0.1:58171', 'sec-fetch-site': 'cross-site' } })?.code,
+    'untrusted',
+  )
+
+  const unknownOrigin = createTrustGuard({ getOrigin: () => undefined })
+  assert.equal(unknownOrigin({ headers: { host: '127.0.0.1:58171' } }), undefined)
+  assert.equal(unknownOrigin({ headers: { host: 'localhost:3080' } }), undefined)
+  assert.equal(unknownOrigin({ headers: { host: '[::1]:58171' } }), undefined)
+  assert.equal(unknownOrigin({ headers: { host: 'evil.example:58171' } })?.status, 403)
+  assert.equal(createTrustGuard()({ headers: { host: 'evil.example' } })?.status, 403)
 })

@@ -380,3 +380,43 @@ test('unexpected store failures map to 500 internal without leaking details', as
   assert.equal(status, 500)
   assert.deepEqual(json, { error: { code: 'internal', message: 'internal server error' } })
 })
+
+test('trust guard runs before routing and body reads', async () => {
+  const { store } = makeStore()
+  let storeReads = 0
+  const handler = createApiHandler({
+    getStore: () => {
+      storeReads += 1
+      return store
+    },
+    trust: () => ({ status: 401, code: 'unauthenticated', message: 'login required' }),
+  })
+
+  // Even an unknown path and a malformed body must be answered by the guard.
+  const unknown = await request(handler, { path: '/persona-manager/api/nope', method: 'POST', body: '{oops' })
+  assert.equal(unknown.status, 401)
+  assert.deepEqual(unknown.json, { error: { code: 'unauthenticated', message: 'login required' } })
+  assert.equal(storeReads, 0)
+
+  const forged = await request(handler, { headers: { host: 'evil.example', origin: 'http://evil.example' } })
+  assert.equal(forged.status, 401)
+  assert.equal(storeReads, 0)
+})
+
+test('trust guard rejection can be a 403 untrusted failure', async () => {
+  const { store } = makeStore()
+  const handler = createApiHandler({
+    getStore: () => store,
+    trust: () => ({ status: 403, code: 'untrusted', message: 'host not allowed' }),
+  })
+  const { status, json } = await request(handler)
+  assert.equal(status, 403)
+  assert.equal(json.error.code, 'untrusted')
+})
+
+test('a passing trust guard keeps the normal API behaviour', async () => {
+  const { store } = makeStore()
+  const handler = createApiHandler({ getStore: () => store, trust: () => undefined })
+  const { status } = await request(handler)
+  assert.equal(status, 200)
+})

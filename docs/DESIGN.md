@@ -1,7 +1,7 @@
 # DSH 人设管理插件 · 设计契约（v0.1.0）
 
 > 本文件是唯一契约。Host / Client / 文档三块按本文件实现，不要擅自改接口。
-> 所有结论都来自当前桌面版 DSH（`<DSH_INSTALL_DIR>\resources\app.asar\dsh`）的实测 API，不是猜的。
+> 所有结论都来自当前桌面版 DSH（`<DSH 安装目录>\resources\app.asar\dsh`）的实测 API，不是猜的。
 
 ## 1. 目标与已确认决策
 
@@ -25,7 +25,7 @@
 ## 2. 包结构与写入归属
 
 ```
-<WORKSPACE>\dsh-persona-manager\
+<workspace>\dsh-persona-manager\
   package.json            Lead
   cordis.patch.yml        Lead
   icon.svg                Lead
@@ -179,10 +179,11 @@ export async function apply(ctx, config) { ... }
 - `/switch` 校验：`scope:'session'` 必须有非空 `sessionId`；`personaId` 必须为 `null` 或存在的 persona id（否则 404 `persona-not-found`）。
 - `/switch` 语义补充：`scope:'session'` 且 `personaId:null` 表示**清掉本会话覆盖、重新跟随全局默认**（删除 sessions 记录）。`store.switchSession(id, null)` 仍保留 §3 的「显式不使用人设」记录语义（删除人设时的连带清理使用它）。
 - `personas` 排序：`createdAt` 升序（旧→新）；客户端自行决定展示。
-- 错误响应：`{ error: { code, message } }`；400 `invalid-json`/`invalid-body`/`invalid-persona`，404 `not-found`/`persona-not-found`，405 `method-not-allowed`，413 `payload-too-large`，500 `internal`。
+- 错误响应：`{ error: { code, message } }`；400 `invalid-json`/`invalid-body`/`invalid-persona`，401 `unauthenticated`，403 `bad-origin`/`untrusted`，404 `not-found`/`persona-not-found`，405 `method-not-allowed`，413 `payload-too-large`，500 `internal`。
 - 安全：
+  - **请求信任围栏（0.1.2 起，必须先于路由与读体执行）**：调用 `ctx.connection.requestRejection({ headers: req.headers })`，应用 DSH Connection 的 Host/Origin 围栏与浏览器 Cookie 认证；围栏失败 → 403 `untrusted`（防 DNS rebinding / 跨站），围栏通过但未认证 → 401 `unauthenticated`。`connection` 服务缺失时退回：只允许 Web origin 的 host（取 `webServer.getOrigin()`；解析不到时只允许 loopback host），并拒绝 `sec-fetch-site: cross-site`。
   - 只接受 GET/POST/PUT/DELETE，其余 405。
-  - 若存在 `Origin` 头，其 host 必须等于请求 `Host` 头，否则 403 `bad-origin`（防 CSRF；无 Origin 的本地请求放行）。
+  - 若存在 `Origin` 头，其 host 必须等于请求 `Host` 头，否则 403 `bad-origin`（纵深防御）。
   - 请求体上限 1 MiB。
   - 路径参数 id 只允许 `[a-zA-Z0-9_-]+`。
 - 未知子路径 → 404。

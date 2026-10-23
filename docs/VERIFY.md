@@ -7,9 +7,9 @@
 ## 1. 安装
 
 ```
-plugin_manager install_bundle target=<WORKSPACE>\dsh-persona-manager
+plugin_manager install_bundle target=<本地路径>
 → stage: enable, enabled: true, application: applied, warnings: []
-→ pnpm: + @hxql/dsh-persona-manager 0.1.0 <- <WORKSPACE>\dsh-persona-manager
+→ pnpm: + @hxql/dsh-persona-manager 0.1.0 <- <本地路径>
 → profile package.json dependency: "@hxql/dsh-persona-manager": "link:E:\\dsh_work\\dsh-persona-manager"
 ```
 
@@ -25,9 +25,9 @@ id: include:persona-manager, patchId: persona-manager, name: "@hxql/dsh-persona-
 ## 2. 单元测试与静态检查
 
 ```
-cd <WORKSPACE>\dsh-persona-manager
+cd <本地路径>
 node --check index.js client.js lib/host/*.js        → 0 failures（13 个 JS/MJS 文件全部通过）
-npm test  (node --test, 自动发现 test/*.test.mjs)     → 83 pass / 0 fail
+npm test  (node --test, 自动发现 test/*.test.mjs)     → 92 pass / 0 fail（0.1.2 新增 9 个信任围栏用例）
 npm pack --dry-run                                   → @hxql/dsh-persona-manager@0.1.0, 18 files, 210.6 kB unpacked
 git init + commit a106a47 (local repo; 未推送 GitHub)
 ```
@@ -149,7 +149,14 @@ Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-20261023-174115" "$env:USERPROFIL
 - 发布校验：`npm view` 元数据正确、`npm pack @hxql/dsh-persona-manager@0.1.0` 可下载且 tarball 18 个文件完整。
 - 0.1.1 为文档状态修正版本（无代码行为变化）。
 
-## 10. 未验证/限制
+## 10. 安全修复（0.1.2）
+
+- **问题**：0.1.1 之前 `/persona-manager/api` 只做 `Origin host == Host`；实测伪造 `Host: evil.example` + `Origin: http://evil.example` 返回 200，DNS rebinding 可读取/篡改人设。
+- **修复**：请求处理前调用 `ctx.connection.requestRejection({ headers })`，应用 DSH Connection 的 Host/Origin 围栏与浏览器 Cookie 认证——围栏失败 403 `untrusted`，未认证 401 `unauthenticated`；Connection 服务缺失时退回「仅 Web origin host / loopback host + 拒绝 `sec-fetch-site: cross-site`」。
+- **测试**：`npm test` → 92/92；新增 9 个围栏用例，含真实 `apply()` 集成（403 / 401 / 放行）。
+- **live 限制**：本 profile 以 link 方式安装，host 模块更新需重启 DSH 才会加载新代码；重启后可用伪造 Host 复测（应 403）。浏览器页面自身的正常性需主人打开设置页/输入框芯片确认。
+
+## 11. 未验证/限制
 
 - **视觉渲染未验证**：本会话无浏览器自动化，设置页与芯片浮层的真实布局、z-index、
   主题观感、真实浏览器 fetch 控制台未见。槽位注册与组件首渲染已由 vm 冒烟测试覆盖；

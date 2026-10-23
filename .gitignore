@@ -5,3 +5,12 @@ Thumbs.db
 *.tgz
 coverage/
 test-output/
+
+# credential-like files (never commit)
+.npmrc
+.env
+.env.*
+*.pem
+*.key
+*.crt
+npm-debug.log*

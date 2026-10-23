@@ -1,6 +1,7 @@
 # 发布指南（v0.1.0）
 
 > **当前状态：已发布。** `0.1.0` 已 push 到 GitHub（`main` + tag `v0.1.0` + Release）并发布到 npm；`0.1.1` 为文档状态修正版，同样推送 GitHub 并发布 npm。
+> `0.1.2` 为安全修复版（API 请求信任围栏），同一流程发布。
 > 发布经验：当前 npm 对 `npm publish` 走「处理队列 / 阶段性发布」，PUT 返回 **202** 后需等待几分钟才在 registry 可见；
 > 新包首次发布会附加一个 `0.0.0-stage` 占位版本；2FA 通过 npm 的 web-auth 流程完成（`npm publish` 会打印 `https://www.npmjs.com/auth/cli/<id>`）。
 
@@ -24,7 +25,7 @@
 
 ## 2. 发布前检查
 
-前置：Node ≥ 18、npm、git；工作目录 `<WORKSPACE>\dsh-persona-manager`。
+前置：Node ≥ 18、npm、git；工作目录 `<本地路径>\dsh-persona-manager`。
 
 ### 2.1 文件齐全
 
@@ -165,7 +166,7 @@ npm view @hxql/dsh-persona-manager version
 
 ```powershell
 # 普通 PowerShell（非管理员）
-cd <WORKSPACE>\dsh-persona-manager
+cd <本地路径>\dsh-persona-manager
 git init -b main                          # 若目录还不是 git 仓库
 git add .
 git commit -m "chore: initial import v0.1.0"
@@ -187,7 +188,7 @@ Release：
 
 ```powershell
 # 普通 PowerShell（非管理员）；<profile-name> 换成目标 profile
-dsh plugin --profile <profile-name> add <WORKSPACE>\dsh-persona-manager
+dsh plugin --profile <profile-name> add <本地路径>\dsh-persona-manager
 ```
 
 验证清单：

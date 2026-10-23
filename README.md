@@ -5,19 +5,20 @@
 
 **文档语言**：简体中文（主）· [English](README_EN.md)
 
-[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 83 passing](https://img.shields.io/badge/tests-83%20passing-brightgreen)](test/)
+[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 92 passing](https://img.shields.io/badge/tests-92%20passing-brightgreen)](test/)
 
 | 项目 | 值 |
 |---|---|
 | npm 包名 | `@hxql/dsh-persona-manager` |
-| 版本 | `0.1.1` |
+| 版本 | `0.1.2` |
 | 许可证 | MIT，见 [LICENSE](LICENSE) |
 | 仓库 | `https://github.com/hxql666/dsh-persona-manager`（已开源） |
 | 设计契约 | [docs/DESIGN.md](docs/DESIGN.md)（行为描述的唯一依据） |
 | 变更记录 | [CHANGELOG.md](CHANGELOG.md) |
 | 发布说明 | [docs/PUBLISH.md](docs/PUBLISH.md) |
 
-> **当前状态**：0.1.1 已开源到 GitHub（[v0.1.1 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.1)）并发布到 npm（[`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)）。
+> **当前状态**：0.1.2 已开源到 GitHub（[v0.1.2 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.2)）并发布到 npm（[`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)）。
+> 0.1.2 为安全修复版：API 路由强制 DSH Connection 信任围栏，非本机 Host 返回 403、未认证请求返回 401。
 > 三种安装方式都可用：npm 包名、GitHub 仓库、本地目录（Plugin Manager 或命令行均可）。发布流程见 [docs/PUBLISH.md](docs/PUBLISH.md)。
 
 ## 目录
@@ -91,7 +92,7 @@ dsh plugin --profile <profile-name> add @hxql/dsh-persona-manager
 dsh plugin --profile <profile-name> add https://github.com/hxql666/dsh-persona-manager.git
 
 # 本地目录安装（开发 / 离线场景）
-dsh plugin --profile <profile-name> add <WORKSPACE>\dsh-persona-manager
+dsh plugin --profile <profile-name> add <本地路径>\dsh-persona-manager
 ```
 
 说明：
@@ -315,6 +316,8 @@ Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-<时间戳>" "$env:USERPROFILE\.d
 
 Client UI 通过同源相对路径访问 Host 路由，前缀为 `/persona-manager/api`（`kind: 'prefix'`）。响应均为 `Content-Type: application/json; charset=utf-8`，并带 `Cache-Control: no-store`。
 
+该路由只服务本插件的浏览器 UI：请求先经过 DSH Connection 信任围栏（Host 必须是本机监听地址、Origin 必须同源、浏览器 Cookie 必须有效），非本机 Host 返回 403 `untrusted`，无浏览器凭据返回 401 `unauthenticated`。它不是公共 API，裸命令行调用会被拒绝。
+
 | 方法 | 路径 | 请求体 | 成功响应 |
 |---|---|---|---|
 | GET | `/state?sessionId=<可选>` | — | `{ version: 1, personas: [...], global: { activePersonaId }, session: { personaId } \| null, effectivePersonaId }` |
@@ -328,16 +331,16 @@ Client UI 通过同源相对路径访问 Host 路由，前缀为 `/persona-manag
 - `scope: 'session'` 必须带非空 `sessionId`；`personaId` 为已存在的 id 时写入会话覆盖；`personaId: null` 表示**清除会话覆盖、重新跟随全局默认**（删除记录）。存储层仍保留「显式不使用人设」的记录语义，它只会在删除人设的连带清理中出现。
 - `scope: 'global'` 且 `personaId: null` 表示清除全局默认（所有没有会话覆盖的会话回到「无人设」）。
 - `personas` 按 `createdAt` 升序（旧 → 新）返回；展示顺序由客户端决定。
-- 错误统一为 `{ error: { code, message } }`：400 `invalid-json` / `invalid-body` / `invalid-persona`，404 `not-found` / `persona-not-found`，405 `method-not-allowed`，413 `payload-too-large`，500 `internal`。
-- 安全：只接受 GET/POST/PUT/DELETE（其余 405）；`Origin` 的 host 必须等于 `Host`（否则 403 `bad-origin`，无 `Origin` 的本地请求放行）；请求体上限 1 MiB；路径参数 id 只允许 `[a-zA-Z0-9_-]+`；未知子路径 404。
+- 错误统一为 `{ error: { code, message } }`：400 `invalid-json` / `invalid-body` / `invalid-persona`，401 `unauthenticated`，403 `bad-origin` / `untrusted`，404 `not-found` / `persona-not-found`，405 `method-not-allowed`，413 `payload-too-large`，500 `internal`。
+- 安全：先过 DSH Connection 信任围栏（防 DNS rebinding / 跨站；失败 401/403），再只接受 GET/POST/PUT/DELETE（其余 405）；`Origin` 的 host 必须等于 `Host`（纵深防御，否则 403 `bad-origin`）；请求体上限 1 MiB；路径参数 id 只允许 `[a-zA-Z0-9_-]+`；未知子路径 404。
 
-示例（普通 PowerShell，非管理员）：
+调用方式（仅页面内使用）：
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:<port>/persona-manager/api/state | ConvertTo-Json -Depth 6
+```text
+GET /persona-manager/api/state
 ```
 
-> `<port>` 以当前 DSH Web 服务的实际端口为准。
+> 裸命令行（如 `Invoke-RestMethod`）没有页面 Cookie，会得到 401 `unauthenticated`；需要调试时请从浏览器 DevTools 复制请求头。
 
 ## 13. 卸载与回滚
 
@@ -387,7 +390,7 @@ Invoke-RestMethod http://127.0.0.1:<port>/persona-manager/api/state | ConvertTo-
 
 ## 16. 版本与非目标
 
-当前版本 **0.1.1**（见 [CHANGELOG.md](CHANGELOG.md)）；已开源到 GitHub 并发布到 npm。
+当前版本 **0.1.2**（见 [CHANGELOG.md](CHANGELOG.md)）；已开源到 GitHub 并发布到 npm。
 
 v1 明确**不做**（详见契约第 1 节）：
 

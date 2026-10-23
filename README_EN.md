@@ -5,19 +5,20 @@
 
 **Document language**: [简体中文](README.md) (primary) · English
 
-[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 83 passing](https://img.shields.io/badge/tests-83%20passing-brightgreen)](test/)
+[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 92 passing](https://img.shields.io/badge/tests-92%20passing-brightgreen)](test/)
 
 | Item | Value |
 |---|---|
 | npm package | `@hxql/dsh-persona-manager` |
-| Version | `0.1.1` |
+| Version | `0.1.2` |
 | License | MIT, see [LICENSE](LICENSE) |
 | Repository | `https://github.com/hxql666/dsh-persona-manager` (open source) |
 | Design contract | [docs/DESIGN.md](docs/DESIGN.md) (the sole source of truth for behavior) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 | Publishing guide | [docs/PUBLISH.md](docs/PUBLISH.md) |
 
-> **Current status**: 0.1.1 is open-sourced on GitHub ([v0.1.1 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.1)) and published to npm ([`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)).
+> **Current status**: 0.1.2 is open-sourced on GitHub ([v0.1.2 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.2)) and published to npm ([`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)).
+> 0.1.2 is a security release: the API route enforces the DSH Connection trust fence — non-loopback Hosts get 403 and unauthenticated requests get 401.
 > All three installation routes work: npm package name, the GitHub repository, or a local directory (Plugin Manager or command line). See [docs/PUBLISH.md](docs/PUBLISH.md) for the release flow.
 
 ## Contents
@@ -91,7 +92,7 @@ dsh plugin --profile <profile-name> add @hxql/dsh-persona-manager
 dsh plugin --profile <profile-name> add https://github.com/hxql666/dsh-persona-manager.git
 
 # Install from a local directory (development / offline)
-dsh plugin --profile <profile-name> add <WORKSPACE>\dsh-persona-manager
+dsh plugin --profile <profile-name> add <local-path>\dsh-persona-manager
 ```
 
 Notes:
@@ -315,6 +316,8 @@ Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-<timestamp>" "$env:USERPROFILE\.d
 
 The client UI talks to Host routes through same-origin relative paths under the prefix `/persona-manager/api` (`kind: 'prefix'`). Every response is `Content-Type: application/json; charset=utf-8` with `Cache-Control: no-store`.
 
+This route serves only this plugin's browser UI: every request first passes the DSH Connection trust fence (Host must be the local listener, the Origin must match, and the browser cookie must be valid). A non-local Host is rejected with 403 `untrusted`; a request without browser credentials gets 401 `unauthenticated`. It is not a public API, and a bare command-line call is refused.
+
 | Method | Path | Request body | Success response |
 |---|---|---|---|
 | GET | `/state?sessionId=<optional>` | — | `{ version: 1, personas: [...], global: { activePersonaId }, session: { personaId } \| null, effectivePersonaId }` |
@@ -328,16 +331,16 @@ Constraints and errors:
 - `scope: 'session'` requires a non-empty `sessionId`; an existing persona id writes a session override, while `personaId: null` **clears the override and follows the global default again** (the record is deleted). The store still keeps an "explicitly no persona" record semantic; it only appears in the cascade cleanup after a persona deletion.
 - `scope: 'global'` with `personaId: null` clears the global default (every session without an override falls back to "no persona").
 - `personas` are returned in `createdAt` ascending order (old → new); display order is up to the client.
-- Errors are uniformly `{ error: { code, message } }`: 400 `invalid-json` / `invalid-body` / `invalid-persona`, 404 `not-found` / `persona-not-found`, 405 `method-not-allowed`, 413 `payload-too-large`, 500 `internal`.
-- Security: only GET/POST/PUT/DELETE are accepted (others 405); the `Origin` host must equal `Host` (otherwise 403 `bad-origin`; local requests without `Origin` are allowed); request bodies are capped at 1 MiB; path-parameter ids may only match `[a-zA-Z0-9_-]+`; unknown subpaths return 404.
+- Errors are uniformly `{ error: { code, message } }`: 400 `invalid-json` / `invalid-body` / `invalid-persona`, 401 `unauthenticated`, 403 `bad-origin` / `untrusted`, 404 `not-found` / `persona-not-found`, 405 `method-not-allowed`, 413 `payload-too-large`, 500 `internal`.
+- Security: the request first passes the DSH Connection trust fence (DNS-rebinding / cross-site protection; failures are 401/403), then only GET/POST/PUT/DELETE are accepted (others 405); the `Origin` host must equal `Host` (defense in depth, otherwise 403 `bad-origin`); request bodies are capped at 1 MiB; path-parameter ids may only match `[a-zA-Z0-9_-]+`; unknown subpaths return 404.
 
-Example (normal PowerShell, non-administrator):
+Calling convention (page use only):
 
-```powershell
-Invoke-RestMethod http://127.0.0.1:<port>/persona-manager/api/state | ConvertTo-Json -Depth 6
+```text
+GET /persona-manager/api/state
 ```
 
-> `<port>` must be the actual port of the current DSH Web service.
+> A bare command-line call (e.g. `Invoke-RestMethod`) has no page cookie and gets 401 `unauthenticated`; copy the request headers from the browser DevTools when debugging.
 
 ## 13. Uninstall and rollback
 
@@ -387,7 +390,7 @@ Invoke-RestMethod http://127.0.0.1:<port>/persona-manager/api/state | ConvertTo-
 
 ## 16. Version and non-goals
 
-Current version **0.1.1** (see [CHANGELOG.md](CHANGELOG.md)); open-sourced on GitHub and published to npm.
+Current version **0.1.2** (see [CHANGELOG.md](CHANGELOG.md)); open-sourced on GitHub and published to npm.
 
 v1 explicitly does **not** do (see section 1 of the contract):
 
