@@ -28,7 +28,8 @@ id: include:persona-manager, patchId: persona-manager, name: "@hxql/dsh-persona-
 cd <WORKSPACE>\dsh-persona-manager
 node --check index.js client.js lib/host/*.js        → 0 failures（13 个 JS/MJS 文件全部通过）
 npm test  (node --test, 自动发现 test/*.test.mjs)     → 83 pass / 0 fail
-npm pack --dry-run                                   → @hxql/dsh-persona-manager@0.1.0, 18 files, 209.7 kB unpacked
+npm pack --dry-run                                   → @hxql/dsh-persona-manager@0.1.0, 18 files, 210.6 kB unpacked
+git init + commit a106a47 (local repo; 未推送 GitHub)
 ```
 
 > Node v24.19.0 的 `node --test test/` 会把目录当脚本执行并失败，因此 `package.json`
