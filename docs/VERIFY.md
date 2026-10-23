@@ -63,7 +63,7 @@ git init + commit a106a47 (local repo; 未推送 GitHub)
 
 ## 4. 存储落盘（官方 JSON 后端）
 
-首次加载后生成 `%USERPROFILE%\.dsh\storages\persona_manager.json`（`dsh-storage-json` `single` 布局）：
+首次加载后生成 `$DSH_HOME\storages\persona_manager.json`（`dsh-storage-json` `single` 布局）：
 
 ```json
 {
@@ -101,8 +101,8 @@ git init + commit a106a47 (local repo; 未推送 GitHub)
 
 ## 6. 系统提示注入端到端（durable session log 证据）
 
-会话：`<session-id>`（本会话，创建于插件安装**之前**的 live agent）。
-日志：`%USERPROFILE%\.dsh\sessions\--E-dsh_work--\<session-id>\session.v4.jsonl.zstd`
+会话：本会话（创建于插件安装**之前**的 live agent；id 已隐去）。
+日志：`$DSH_HOME\sessions\--E-dsh_work--\<current-session-id>\session.v4.jsonl.zstd`
 （多帧 zstd；用 `_recon/read-session-prompt.mjs` 逐帧解压后读取 `system/message`）。
 
 | seq | 时机 | 系统提示开头 | 结论 |
@@ -150,3 +150,4 @@ Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-20261023-174115" "$env:USERPROFIL
   脱离进程的一次性 cordis harness 中验证：重挂载读取既有 medium、不重复播种、数据完整。
 - **KV cache**：切换人设会改变系统提示前缀，按设计从第一个变化的 token 起失去缓存复用，
   属预期行为，未做量化测量。
+

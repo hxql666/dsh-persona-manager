@@ -4,9 +4,8 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-> **状态（2026-10-23）**：`0.1.0` 已按 [docs/DESIGN.md](docs/DESIGN.md) 准备完毕，
-> **尚未发布到 npm，也尚未 push 到 GitHub**（prepared, not yet published）。
-> 真正发布后请更新本节状态与发布日期。
+> **状态（2026-10-23）**：`0.1.0` 已完成并验证（83/83 tests）；**已开源到 GitHub**
+> （[v0.1.0 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.0)），**npm 尚未发布**。
 
 ## [Unreleased]
 
@@ -29,9 +28,9 @@
 - **国际化与主题**：Client 文案走 zh / en 两份 locale 字典，跟随界面语言切换；样式只使用宿主主题变量，类名前缀 `dsh-pm-`，人设 emoji 圆标背景使用人设 `color`。
 - **Workspace bundle 与包元数据**：`cordis.patch.yml` 只插入一行 Host 插件记录（id `persona-manager`）；`package.json` 提供 `dsh.bundle` / `dsh.client` 配置、`exports`、`icon`、`files` 清单（纯 JS，无构建、无第三方运行时依赖）。
 - **文档**：`README.md`（简体中文）、`README_EN.md`（英文，章节结构对应）、`CHANGELOG.md`、`LICENSE`（MIT）、`docs/PUBLISH.md`（发布前检查与回滚）、`docs/DESIGN.md`（设计契约）。
-- **测试脚本**：`npm test`（= `node --test test/`）；Host 侧测试文件 `test/host-*.mjs`，Client 侧为静态 / 纯函数检查 `test/client-*.mjs`。
+- **测试脚本**：`npm test`（= `node --test`，自动发现 `test/*.test.mjs`）；Host 侧测试文件 `test/host-*.mjs`，Client 侧为静态 / 纯函数检查 `test/client-*.mjs`。
 
 ### Notes
 
-- 本版本**未发布**：npm 包与 GitHub 仓库都还是本地状态，安装请使用本地路径（见 [README.md](README.md)）。
+- 发布状态：GitHub 仓库与 `v0.1.0` Release 已发布；npm 包尚未发布（需要 npm 登录 + 2FA，并可能进入 staged publishing 审批）。
 - v1 非目标：斜杠命令、给模型的 persona 工具、JSON/Markdown 导入导出、工作区级人设文件、多人设叠加、SSE 实时推送。

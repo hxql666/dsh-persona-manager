@@ -1,8 +1,8 @@
 # 发布指南（v0.1.0）
 
-> **当前状态：已准备，尚未发布。** `0.1.0` 已在本地准备完毕；
-> **没有**发布到 npm，**没有** push 到任何 GitHub 仓库，也**没有**创建 tag / Release。
-> 本文是「真正要对外发布时」才执行的清单。项目契约明确本轮不 publish、不 push。
+> **当前状态：GitHub 已开源，npm 尚未发布。** `0.1.0` 已 push 到 `https://github.com/hxql666/dsh-persona-manager`
+> （`main` 分支 + tag `v0.1.0` + GitHub Release）。npm 侧仍待执行：
+> 需要维护者登录 npm 账号并完成（可能的）staged publishing 审批，之后按本清单继续。
 
 执行任何发布动作（`npm publish`、`git push`、创建 Release）前，请先确认你（维护者）确实要对外发布。本文所有命令都在**普通 PowerShell（非管理员）**中执行。
 

@@ -45,7 +45,7 @@
   .gitignore              Lead
 ```
 
-禁止跨归属写文件；禁止运行 `plugin_manager` / 修改 `%USERPROFILE%\.dsh`；禁止 `npm install`。
+禁止跨归属写文件；禁止运行 `plugin_manager` / 修改用户级 `~/.dsh`；禁止 `npm install`。
 
 ## 3. 数据模型
 
@@ -265,3 +265,4 @@ window.__ModuleLoader__.load({
 6. 端到端：切换全局人设 → 下一轮请求后读该会话 JSONL，`system/message` 里出现人设正文；再切会话覆盖 → 文本变化。
 7. AGENTS.md：备份为 `AGENTS.md.bak-<时间戳>` 后，删除「人格加载（每次会话默认生效）」段的强制加载要求（保留人设边界条款），并记录回滚方法。
 8. `npm pack --dry-run` 检查发布文件清单。
+

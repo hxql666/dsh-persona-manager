@@ -5,18 +5,20 @@
 
 **文档语言**：简体中文（主）· [English](README_EN.md)
 
+[![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 83 passing](https://img.shields.io/badge/tests-83%20passing-brightgreen)](test/)
+
 | 项目 | 值 |
 |---|---|
 | npm 包名 | `@hxql/dsh-persona-manager` |
 | 版本 | `0.1.0` |
 | 许可证 | MIT，见 [LICENSE](LICENSE) |
-| 仓库 | `https://github.com/hxql666/dsh-persona-manager`（**尚未 push**） |
+| 仓库 | `https://github.com/hxql666/dsh-persona-manager`（已开源） |
 | 设计契约 | [docs/DESIGN.md](docs/DESIGN.md)（行为描述的唯一依据） |
 | 变更记录 | [CHANGELOG.md](CHANGELOG.md) |
 | 发布说明 | [docs/PUBLISH.md](docs/PUBLISH.md) |
 
-> **当前状态**：0.1.0 已按 [docs/DESIGN.md](docs/DESIGN.md) 准备完毕，但**尚未发布到 npm，也尚未 push 到 GitHub**。
-> 所以现在只能从本地路径安装（Plugin Manager 或命令行均可）；git URL / npm 安装方式要等发布后才可用。发布前检查清单见 [docs/PUBLISH.md](docs/PUBLISH.md)。
+> **当前状态**：0.1.0 已开源到 GitHub（[v0.1.0 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.0)），**npm 尚未发布**。
+> 现在可从 GitHub 仓库或本地路径安装（Plugin Manager 或命令行均可）；npm 安装方式要等发布后才可用。发布前检查清单见 [docs/PUBLISH.md](docs/PUBLISH.md)。
 
 ## 目录
 
@@ -82,10 +84,10 @@
 
 ```powershell
 # 普通 PowerShell（非管理员）
-# 本地目录安装（当前 0.1.0 尚未 push，推荐这一种）
+# 本地目录安装（开发 / 离线场景）
 dsh plugin --profile <profile-name> add <WORKSPACE>\dsh-persona-manager
 
-# Git URL 安装（要等仓库 push 之后才可用）
+# GitHub 仓库安装（0.1.0 已开源）
 dsh plugin --profile <profile-name> add https://github.com/hxql666/dsh-persona-manager.git
 ```
 
@@ -382,7 +384,7 @@ Invoke-RestMethod http://127.0.0.1:<port>/persona-manager/api/state | ConvertTo-
 
 ## 16. 版本与非目标
 
-当前版本 **0.1.0**（见 [CHANGELOG.md](CHANGELOG.md)）；尚未发布到 npm、尚未 push GitHub。
+当前版本 **0.1.0**（见 [CHANGELOG.md](CHANGELOG.md)）；已开源到 GitHub（v0.1.0 release），npm 尚未发布。
 
 v1 明确**不做**（详见契约第 1 节）：
 
@@ -396,7 +398,7 @@ v1 明确**不做**（详见契约第 1 节）：
 ## 17. 许可证与链接
 
 - 许可证：**MIT**，Copyright (c) 2026 hxql，全文见 [LICENSE](LICENSE)。
-- 仓库：`https://github.com/hxql666/dsh-persona-manager`（尚未 push）。
+- 仓库：`https://github.com/hxql666/dsh-persona-manager`（已开源）。
 - 包名：`@hxql/dsh-persona-manager`。
 - 相关文档：[设计契约](docs/DESIGN.md) · [发布说明](docs/PUBLISH.md) · [变更记录](CHANGELOG.md) · [English README](README_EN.md)。
 

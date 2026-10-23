@@ -5,18 +5,20 @@
 
 **Document language**: [简体中文](README.md) (primary) · English
 
+[![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 83 passing](https://img.shields.io/badge/tests-83%20passing-brightgreen)](test/)
+
 | Item | Value |
 |---|---|
 | npm package | `@hxql/dsh-persona-manager` |
 | Version | `0.1.0` |
 | License | MIT, see [LICENSE](LICENSE) |
-| Repository | `https://github.com/hxql666/dsh-persona-manager` (**not pushed yet**) |
+| Repository | `https://github.com/hxql666/dsh-persona-manager` (open source) |
 | Design contract | [docs/DESIGN.md](docs/DESIGN.md) (the sole source of truth for behavior) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 | Publishing guide | [docs/PUBLISH.md](docs/PUBLISH.md) |
 
-> **Current status**: 0.1.0 is prepared according to [docs/DESIGN.md](docs/DESIGN.md), but **nothing has been published to npm and nothing has been pushed to GitHub**.
-> Therefore only local-path installation works for now (either through the Plugin Manager or the command line); git URL / npm installation becomes available after publishing. See [docs/PUBLISH.md](docs/PUBLISH.md) for the pre-publish checklist.
+> **Current status**: 0.1.0 is open-sourced on GitHub ([v0.1.0 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.0)); **npm publishing is still pending**.
+> Install from the GitHub repository or a local path for now (Plugin Manager or command line); npm installation becomes available after publishing. See [docs/PUBLISH.md](docs/PUBLISH.md) for the pre-publish checklist.
 
 ## Contents
 
@@ -82,10 +84,10 @@ Install this bundle through DSH's Plugin Manager (the `plugin_manager install_bu
 
 ```powershell
 # Normal PowerShell (non-administrator)
-# Install from a local directory (0.1.0 is not pushed yet, so this is the recommended way)
+# Install from a local directory (development / offline)
 dsh plugin --profile <profile-name> add <WORKSPACE>\dsh-persona-manager
 
-# Install from a Git URL (only available after the repository has been pushed)
+# Install from the GitHub repository (0.1.0 is open source)
 dsh plugin --profile <profile-name> add https://github.com/hxql666/dsh-persona-manager.git
 ```
 
@@ -382,7 +384,7 @@ Invoke-RestMethod http://127.0.0.1:<port>/persona-manager/api/state | ConvertTo-
 
 ## 16. Version and non-goals
 
-Current version **0.1.0** (see [CHANGELOG.md](CHANGELOG.md)); not published to npm and not pushed to GitHub.
+Current version **0.1.0** (see [CHANGELOG.md](CHANGELOG.md)); open-sourced on GitHub (v0.1.0 release); npm publishing is still pending.
 
 v1 explicitly does **not** do (see section 1 of the contract):
 
@@ -396,7 +398,7 @@ v1 explicitly does **not** do (see section 1 of the contract):
 ## 17. License and links
 
 - License: **MIT**, Copyright (c) 2026 hxql; full text in [LICENSE](LICENSE).
-- Repository: `https://github.com/hxql666/dsh-persona-manager` (not pushed yet).
+- Repository: `https://github.com/hxql666/dsh-persona-manager` (open source).
 - Package name: `@hxql/dsh-persona-manager`.
 - Related docs: [design contract](docs/DESIGN.md) · [publishing guide](docs/PUBLISH.md) · [changelog](CHANGELOG.md) · [简体中文 README](README.md).
 
