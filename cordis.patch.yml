@@ -1,0 +1,8 @@
+# Persona Manager bundle patch.
+#
+# One package, one Host row. The row carries the Store (persona data on the
+# official JSON storage backend), the per-agent system-prompt persona section,
+# and the local HTTP API the bundled Client UI talks to.
+- insert:
+    - id: persona-manager
+      name: '@hxql/dsh-persona-manager'
