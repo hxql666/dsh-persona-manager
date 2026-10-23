@@ -147,7 +147,8 @@ Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-20261023-174115" "$env:USERPROFIL
 - npm：`@hxql/dsh-persona-manager@0.1.0`、`0.1.1`、`0.1.2` 已发布；`dist-tags.latest = 0.1.2`；首次发布附带 npm 自动生成的 `0.0.0-stage` 占位版本。
 - 发布过程：本地 CLI registry 是 `registry.npmmirror.com`，发布显式使用 `--registry=https://registry.npmjs.org`；`npm publish` 在 2FA 下返回 **202 Accepted**（registry 处理队列），约 4 分钟后 packument 可读；重试同版本会得到 403「cannot publish over the previously published versions」。
 - 发布校验：`npm view` 元数据正确；`npm pack` 0.1.0 / 0.1.2 均可下载，tarball 18 个文件完整；0.1.2 tarball 已含 `createTrustGuard`/`requestRejection` 代码，且 PII/密钥扫描无命中。
-- 0.1.1 为文档状态修正版本；0.1.2 为安全修复版本（提交 `c0eb498`）。
+- 0.1.1 为文档状态修正版本；0.1.2 为安全修复版本（提交 `f327a66`）。
+- 2026-10-23：仓库历史已重写——所有提交的 author/committer 统一为 `252124250+hxql666@users.noreply.github.com`，并清除旧提交里的本机路径与会话 id；旧 commit hash 全部失效，`main` 已强推，tag / Release 按同名重建（旧提交对象已在本地 gc 清理，远端不再可达）。
 
 ## 10. 安全修复（0.1.2）
 
