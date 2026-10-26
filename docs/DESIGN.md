@@ -118,7 +118,7 @@ const SPEC = {
   },
 }
 ```
-- 打开：`await ctx.storageDomain.open(SPEC)`；失败（无 storageDomain、backend 不匹配、文件损坏）→ 捕获并降级为**内存存储**，`ctx.logger.error` 一条，插件仍要能加载。
+- `storageDomain` 是**必需依赖**（写进 `inject`，Cordis 会等存储服务挂载后才激活插件；0.1.3 修复冷启动竞态）。打开：`await ctx.storageDomain.open(SPEC)`；只有真正失败（backend 不匹配、文件损坏）才捕获并降级为**内存存储** + `ctx.logger.error` 一条。
 - 句柄生命周期：`ctx.effect(() => () => domain.close())` 形式注册清理；domain 已在 facility 关闭时兜底。
 - 写入必须 `await table.put(...)` / `global.set(...)`，写后同步内存读即可。
 - 读取一律**同步**：`domain.table('personas').get(id)`、`.entries()`。
@@ -134,7 +134,7 @@ export const inject = ['systemPrompt']   // 硬依赖：没有它就不加载
 export async function apply(ctx, config) { ... }
 ```
 可选服务全部用 `ctx.get()` + undefined 判断，或用 `ctx.inject([...], cb)`：
-- `storageDomain`：缺省 → 内存 store（降级）。
+- `storageDomain`：**必需依赖**（在 `inject` 中声明），Cordis 保证服务就绪后才 apply；仅 `open()` 失败时降级内存。
 - `agents`：用来给「插件挂载前就已存在的 agent」补注册；缺省则只靠 `agent/created`。
 - `webServer`：缺省 → 不注册 HTTP 路由（CLI/无界面场景仍能用持久化 + 人设注入）。
 - 不得 `inject` 不存在的服务名；`inject` 数组只放 `systemPrompt`。

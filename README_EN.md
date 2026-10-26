@@ -5,20 +5,20 @@
 
 **Document language**: [简体中文](README.md) (primary) · English
 
-[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 92 passing](https://img.shields.io/badge/tests-92%20passing-brightgreen)](test/)
+[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 92 passing](https://img.shields.io/badge/tests-93%20passing-brightgreen)](test/)
 
 | Item | Value |
 |---|---|
 | npm package | `@hxql/dsh-persona-manager` |
-| Version | `0.1.2` |
+| Version | `0.1.3` |
 | License | MIT, see [LICENSE](LICENSE) |
 | Repository | `https://github.com/hxql666/dsh-persona-manager` (open source) |
 | Design contract | [docs/DESIGN.md](docs/DESIGN.md) (the sole source of truth for behavior) |
 | Changelog | [CHANGELOG.md](CHANGELOG.md) |
 | Publishing guide | [docs/PUBLISH.md](docs/PUBLISH.md) |
 
-> **Current status**: 0.1.2 is open-sourced on GitHub ([v0.1.2 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.2)) and published to npm ([`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)).
-> 0.1.2 is a security release: the API route enforces the DSH Connection trust fence — non-loopback Hosts get 403 and unauthenticated requests get 401.
+> **Current status**: 0.1.3 is open-sourced on GitHub ([v0.1.3 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.3)) and published to npm ([`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)).
+> **0.1.3 fixes a cold-start race**: the plugin now declares `storageDomain` as a required dependency, so Cordis activates it only after the storage service is mounted. Previously a cold start could fall back to the in-memory store, making saved personas "disappear" and showing only the freshly seeded default. 0.1.2 was the API trust-fence security release.
 > All three installation routes work: npm package name, the GitHub repository, or a local directory (Plugin Manager or command line). See [docs/PUBLISH.md](docs/PUBLISH.md) for the release flow.
 
 ## Contents
@@ -67,7 +67,7 @@ The plugin depends on Host services as follows (`inject` contains only `systemPr
 | Host service | Requirement | Role and consequence when missing |
 |---|---|---|
 | `systemPrompt` | **Required** (hard dependency) | Registers the persona prompt section; without it the plugin does not load and the settings page, chip and HTTP API all stay absent |
-| `storageDomain` | Recommended (optional, degrades) | Persists through the official `@deepseek-ai/dsh-storage-json` backend; when missing or unable to open, the plugin degrades to **in-memory storage**, logs one `logger.error`, still loads, but loses data on restart |
+| `storageDomain` | **Required** (declared in `inject`) | Persists through the official `@deepseek-ai/dsh-storage-json` backend. Cordis activates the plugin only after this service is mounted (fixes the cold-start race); only a real `open()` failure (backend mismatch / corrupt data file) degrades to **in-memory storage** with one `logger.error`, which loses data on restart |
 | `agents` | Optional | Backfills the persona section for agents that already existed before the plugin was mounted; when missing only agents created after mounting (`agent/created`) are handled |
 | `webServer` | Needed only for the UI (optional for the plugin) | Registers the `/persona-manager/api` HTTP routes used by the client UI; when missing the routes are not registered, while persistence and persona injection keep working but the settings page and chip cannot fetch data |
 
@@ -258,7 +258,7 @@ Field semantics:
 
 Degradation and manual maintenance:
 
-- If `storageDomain` is missing, the backend mismatches, or the data file is corrupt so `open` fails, the plugin catches the error and degrades to **in-memory storage**, logging a single `logger.error`; the plugin still loads, but data is lost when DSH restarts.
+- `storageDomain` is a required dependency: Cordis activates the plugin only after the storage service is ready. Only a real `open()` failure (backend mismatch / corrupt data file) is caught and degraded to **in-memory storage** with one `logger.error`; in that case data is lost when DSH restarts.
 - To edit the file by hand: disable the plugin first (to avoid write races) and back up the original, then re-enable after editing. A malformed file or version mismatch may trigger degradation / backup-and-skip.
 
 ## 9. How the persona reaches the model
@@ -356,7 +356,7 @@ GET /persona-manager/api/state
 |---|---|---|
 | No Personas page in Settings and no persona chip in the composer | the bundle is not enabled; or the profile has no `webServer` (the UI and API depend on it) | confirm the bundle row is enabled and restart DSH; confirm the Host provides `webServer` |
 | The settings page appears but the list never loads / `/persona-manager/api/state` returns 404 | the Host side of the plugin did not load (e.g. the required `systemPrompt` is missing), or the HTTP routes were not registered | check the Host log; confirm the `systemPrompt` service exists |
-| All data is lost after restarting DSH | `storageDomain` is missing or cannot be opened → in-memory fallback | confirm the official `@deepseek-ai/dsh-storage-json` backend is available; re-save personas after fixing (the log contains one `logger.error`) |
+| Data is lost after restarting DSH, or only the default persona is listed | 0.1.2 and older could mount before the storage service was ready and degraded to the in-memory store (fixed in 0.1.3) | upgrade to 0.1.3+ and restart; the data file is still at `$DSH_HOME/storages/persona_manager.json`, no need to re-add personas |
 | A switched persona does not change the model output | only storage was changed and it takes effect on the **next request**; or the session was explicitly set to "do not use a persona" | send the next message and check again; verify the chip shows the persona you expect |
 | The persona body does not appear in the system prompt / the tone does not change | `deployment:persona-prefix` is already occupied by `@deepseek-ai/dsh-persona` in the same scope, so the plugin used the `persona-manager:persona` fallback (the log has a `logger.info`); or `AGENTS.md` still forces a persona, stacking two sources | check the log and any other preset/plugin that injects a persona; handle `AGENTS.md` per section 11 |
 | The API returns 403 `bad-origin` | the request carried an `Origin` header whose host differs from `Host` (common behind reverse proxies) | connect to the DSH Web service directly on the machine, or keep Host/Origin consistent on the proxy |
@@ -390,7 +390,7 @@ GET /persona-manager/api/state
 
 ## 16. Version and non-goals
 
-Current version **0.1.2** (see [CHANGELOG.md](CHANGELOG.md)); open-sourced on GitHub and published to npm.
+Current version **0.1.3** (see [CHANGELOG.md](CHANGELOG.md)); open-sourced on GitHub and published to npm.
 
 v1 explicitly does **not** do (see section 1 of the contract):
 

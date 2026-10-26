@@ -8,9 +8,12 @@
  * 3. one scoped `deployment:persona-prefix` prompt section per live agent,
  * 4. the `/persona-manager/api` HTTP routes when `webServer` is available.
  *
- * Hard dependency: `systemPrompt` only. `storageDomain`, `agents`, and
- * `webServer` are resolved optionally with `ctx.get()`, so the plugin still
- * loads in a headless/minimal composition.
+ * Hard dependencies: `systemPrompt` (prompt sections) and `storageDomain`
+ * (persistent store). Declaring `storageDomain` makes Cordis activate this
+ * plugin only after the storage service is mounted; without it a cold start
+ * could race the service, silently degrade to the in-memory store, and hide
+ * every persisted persona behind a freshly seeded default. `agents` and
+ * `webServer` remain optional.
  */
 
 import { createMemoryDomain, createStore, STORAGE_DOMAIN_SPEC } from './lib/host/store.js'
@@ -21,8 +24,8 @@ import { registerHttp } from './lib/host/http.js'
 /** Cordis plugin name (the package name). */
 export const name = '@hxql/dsh-persona-manager'
 
-/** Hard dependency: the prompt section registry. Nothing else is injected. */
-export const inject = ['systemPrompt']
+/** Hard dependencies: the prompt registry and the persistent domain service. */
+export const inject = ['systemPrompt', 'storageDomain']
 
 /**
  * Open the storage domain, degrading to an in-memory domain on any failure.

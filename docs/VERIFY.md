@@ -27,7 +27,7 @@ id: include:persona-manager, patchId: persona-manager, name: "@hxql/dsh-persona-
 ```
 cd <本地路径>
 node --check index.js client.js lib/host/*.js        → 0 failures（13 个 JS/MJS 文件全部通过）
-npm test  (node --test, 自动发现 test/*.test.mjs)     → 92 pass / 0 fail（0.1.2 新增 9 个信任围栏用例）
+npm test  (node --test, 自动发现 test/*.test.mjs)     → 93 pass / 0 fail（0.1.2 新增 9 个信任围栏用例，0.1.3 新增 1 个依赖断言）
 npm pack --dry-run                                   → @hxql/dsh-persona-manager@0.1.0, 18 files, 210.6 kB unpacked
 git init + commit a106a47 (local repo; 未推送 GitHub)
 ```
@@ -157,7 +157,14 @@ Copy-Item "$env:USERPROFILE\.dsh\AGENTS.md.bak-20261023-174115" "$env:USERPROFIL
 - **测试**：`npm test` → 92/92；新增 9 个围栏用例，含真实 `apply()` 集成（403 / 401 / 放行）。
 - **live 限制**：本 profile 以 link 方式安装，host 模块更新需重启 DSH 才会加载新代码；重启后可用伪造 Host 复测（应 403）。浏览器页面自身的正常性需主人打开设置页/输入框芯片确认。
 
-## 11. 未验证/限制
+## 11. 冷启动存储修复（0.1.3）
+
+- **现场**：设置页只列 1 份人设，但 `$DSH_HOME/storages/persona_manager.json` 里有 2 份（含恋人版）；当前运行实例热重载后诊断显示 `domainOpen: true` 且 2 份人设、全局默认=恋人版。
+- **根因**：冷启动时插件在 `storageDomain` 服务就绪前就执行 `apply()`，`ctx.get('storageDomain')` 为空 → 降级内存存储并重新播种默认人设；用户看到的就是“人设丢了”。
+- **修复**：`inject` 增加 `storageDomain` 必需依赖，Cordis 会等待存储服务挂载后再激活插件；`open()` 失败才降级内存。
+- **验证方式**：重启 DSH 后查询临时诊断路由 `/persona-diag`（验证完移除该诊断插件），应显示 `domainOpen: true`、2 份人设。
+
+## 12. 未验证/限制
 
 - **视觉渲染未验证**：本会话无浏览器自动化，设置页与芯片浮层的真实布局、z-index、
   主题观感、真实浏览器 fetch 控制台未见。槽位注册与组件首渲染已由 vm 冒烟测试覆盖；

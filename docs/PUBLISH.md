@@ -1,7 +1,7 @@
 # 发布指南（v0.1.0）
 
 > **当前状态：已发布。** `0.1.0` 已 push 到 GitHub（`main` + tag `v0.1.0` + Release）并发布到 npm；`0.1.1` 为文档状态修正版，同样推送 GitHub 并发布 npm。
-> `0.1.2` 为安全修复版（API 请求信任围栏），同一流程发布。
+> `0.1.2` 为安全修复版（API 请求信任围栏）；`0.1.3` 修复冷启动存储竞态，同一流程发布。
 > 发布经验：当前 npm 对 `npm publish` 走「处理队列 / 阶段性发布」，PUT 返回 **202** 后需等待几分钟才在 registry 可见；
 > 新包首次发布会附加一个 `0.0.0-stage` 占位版本；2FA 通过 npm 的 web-auth 流程完成（`npm publish` 会打印 `https://www.npmjs.com/auth/cli/<id>`）。
 

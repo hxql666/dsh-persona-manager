@@ -5,9 +5,16 @@
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
 > **状态（2026-10-23）**：`0.1.0` 已完成并验证，已开源到 GitHub（v0.1.0）并发布到 npm（`@hxql/dsh-persona-manager@0.1.0`）；
-> `0.1.1` 修正文档与发布状态；`0.1.2` 为安全修复版（API 请求信任围栏），均已推送 GitHub 并发布 npm。
+> `0.1.1` 修正文档与发布状态；`0.1.2` 为安全修复版（API 请求信任围栏）；`0.1.3` 修复冷启动存储竞态。均已推送 GitHub 并发布 npm。
 
 ## [Unreleased]
+
+## [0.1.3] - 2026-10-26
+
+### Fixed
+
+- **冷启动存储竞态**：`storageDomain` 未在插件挂载时就绪时会降级到内存存储，界面只剩重新播种的默认人设，已保存的人设看似“消失”。现在把 `storageDomain` 声明为必需依赖（`inject`），Cordis 会等待存储服务挂载后再激活插件；只有 `open()` 真正失败才降级内存并记录 `logger.error`。
+- 新增 1 个测试断言 `inject` 依赖集合（93/93 通过）。
 
 ## [0.1.2] - 2026-10-23
 

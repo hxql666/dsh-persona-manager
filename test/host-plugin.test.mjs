@@ -9,7 +9,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { Readable } from 'node:stream'
 
-import { apply } from '../index.js'
+import { apply, inject } from '../index.js'
 import { createMemoryDomain } from '../lib/host/store.js'
 import { SEED_PERSONA } from '../lib/host/seed.js'
 
@@ -260,7 +260,14 @@ test('apply() wires storage + seed + prompt injection + HTTP API end-to-end', as
   assert.equal(afterUnload.status, 500)
 })
 
+test('declares the persistent storage dependency for cold-start ordering', () => {
+  assert.deepEqual(inject, ['systemPrompt', 'storageDomain'])
+})
+
 test('apply() still loads and injects personas when storageDomain is unavailable', async () => {
+  // Cordis itself will not activate the plugin without storageDomain (see the
+  // inject test above); this direct apply() call covers the defensive fallback
+  // for hosts that call the implementation without the dependency check.
   const harness = makeHarness({})
   await apply(harness.ctx, {})
 

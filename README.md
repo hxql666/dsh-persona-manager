@@ -5,20 +5,20 @@
 
 **文档语言**：简体中文（主）· [English](README_EN.md)
 
-[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 92 passing](https://img.shields.io/badge/tests-92%20passing-brightgreen)](test/)
+[![npm version](https://img.shields.io/npm/v/@hxql/dsh-persona-manager)](https://www.npmjs.com/package/@hxql/dsh-persona-manager) [![GitHub release](https://img.shields.io/github/v/release/hxql666/dsh-persona-manager?display_name=release&sort=semver)](https://github.com/hxql666/dsh-persona-manager/releases) [![License: MIT](https://img.shields.io/github/license/hxql666/dsh-persona-manager)](LICENSE) [![Tests: 92 passing](https://img.shields.io/badge/tests-93%20passing-brightgreen)](test/)
 
 | 项目 | 值 |
 |---|---|
 | npm 包名 | `@hxql/dsh-persona-manager` |
-| 版本 | `0.1.2` |
+| 版本 | `0.1.3` |
 | 许可证 | MIT，见 [LICENSE](LICENSE) |
 | 仓库 | `https://github.com/hxql666/dsh-persona-manager`（已开源） |
 | 设计契约 | [docs/DESIGN.md](docs/DESIGN.md)（行为描述的唯一依据） |
 | 变更记录 | [CHANGELOG.md](CHANGELOG.md) |
 | 发布说明 | [docs/PUBLISH.md](docs/PUBLISH.md) |
 
-> **当前状态**：0.1.2 已开源到 GitHub（[v0.1.2 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.2)）并发布到 npm（[`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)）。
-> 0.1.2 为安全修复版：API 路由强制 DSH Connection 信任围栏，非本机 Host 返回 403、未认证请求返回 401。
+> **当前状态**：0.1.3 已开源到 GitHub（[v0.1.3 release](https://github.com/hxql666/dsh-persona-manager/releases/tag/v0.1.3)）并发布到 npm（[`@hxql/dsh-persona-manager`](https://www.npmjs.com/package/@hxql/dsh-persona-manager)）。
+> **0.1.3 修复冷启动竞态**：插件把 `storageDomain` 声明为必需依赖，等存储服务挂载后才激活；此前冷启动可能降级为内存存储，导致已保存人设“消失”、界面只剩重新播种的默认人设。0.1.2 为 API 信任围栏安全修复。
 > 三种安装方式都可用：npm 包名、GitHub 仓库、本地目录（Plugin Manager 或命令行均可）。发布流程见 [docs/PUBLISH.md](docs/PUBLISH.md)。
 
 ## 目录
@@ -67,7 +67,7 @@
 | Host 服务 | 必需性 | 作用与缺失后果 |
 |---|---|---|
 | `systemPrompt` | **必需**（硬依赖） | 注册人设提示词 section；缺失时插件不会加载，设置页、芯片、HTTP API 全都不会出现 |
-| `storageDomain` | 推荐（可选，缺省降级） | 经官方 `@deepseek-ai/dsh-storage-json` 后端持久化；缺失或打开失败时降级为**内存存储**，记录一条 `logger.error`，插件仍可加载，但重启后数据丢失 |
+| `storageDomain` | **必需**（写在 `inject` 里） | 经官方 `@deepseek-ai/dsh-storage-json` 后端持久化。Cordis 会等该服务就绪后才激活插件（修复冷启动竞态）；只有 `open()` 真正失败（后端不匹配 / 数据文件损坏）时才降级为**内存存储**并记录一条 `logger.error`，此时重启后数据会丢 |
 | `agents` | 可选 | 给「插件挂载前已经存在」的 agent 补注册人设 section；缺失时只处理挂载之后 `agent/created` 的 agent |
 | `webServer` | 仅 UI 需要（插件本身可选） | 注册 `/persona-manager/api` HTTP 路由供 Client UI 调用；缺失时不注册路由，持久化与人设注入照常，但设置页与芯片拿不到数据 |
 
@@ -258,7 +258,7 @@ C:\Users\<用户名>\.dsh\storages\persona_manager.json
 
 降级与手工维护：
 
-- 没有 `storageDomain`、后端不匹配或数据文件损坏导致 `open` 失败时，插件捕获异常并降级为**内存存储**，只记录一条 `logger.error`，插件仍可加载；此时重启 DSH 数据会丢。
+- `storageDomain` 是必需依赖：Cordis 会等存储服务就绪后才激活插件。只有 `open()` 真正失败（后端不匹配、数据文件损坏）时，插件才捕获异常降级为**内存存储**并记录一条 `logger.error`；此时重启 DSH 数据会丢。
 - 若要手工编辑该文件：先禁用插件（避免写入竞争）并备份原文件，改完再启用。数据文件格式错误或版本不符可能触发降级 / 备份跳过。
 
 ## 9. 人设如何到达模型
@@ -356,7 +356,7 @@ GET /persona-manager/api/state
 |---|---|---|
 | Settings 里没有人设管理、输入框也没有人设芯片 | bundle 未启用；或 profile 没有 `webServer`（UI 与 API 都依赖它） | 确认 bundle 行已启用并重启 DSH；确认 Host 提供 `webServer` |
 | 设置页出现但列表一直加载失败 / `/persona-manager/api/state` 404 | 插件 Host 侧未加载（如缺少 `systemPrompt` 硬依赖），或 HTTP 路由未注册 | 查 Host 日志；确认 `systemPrompt` 服务存在 |
-| 数据在重启 DSH 后全部丢失 | `storageDomain` 缺失或打不开 → 降级为内存存储 | 确认官方 `@deepseek-ai/dsh-storage-json` 后端可用；修复后重新保存人设（日志里会有一条 `logger.error`） |
+| 数据在重启 DSH 后丢失，或人设列表只剩一个默认人设 | 0.1.2 及更早版本在冷启动时可能抢在存储服务就绪前挂载，从而降级为内存存储（0.1.3 已修复） | 升级到 0.1.3+ 后重启；数据文件仍在 `$DSH_HOME/storages/persona_manager.json`，无需重新添加 |
 | 切换了人设但模型没变化 | 改的是存储，**下一条请求**才生效；或该会话被显式设为「不使用人设」 | 发下一条消息再看；检查芯片显示的人设与预期一致 |
 | 人设正文没有出现在 system prompt / 语气没变化 | 同一作用域已有 `@deepseek-ai/dsh-persona` 占用 `deployment:persona-prefix`，插件走了 `persona-manager:persona` fallback（日志有 `logger.info`）；或 `AGENTS.md` 里还有强制人设，两个来源叠加 | 检查日志与其他注入人设的预设/插件；按第 11 节处理 `AGENTS.md` |
 | 接口返回 403 `bad-origin` | 请求带了 `Origin` 头，但其 host 与 `Host` 不一致（常见于反向代理） | 本机直连 DSH Web 服务，或让代理保持 Host/Origin 一致 |
@@ -390,7 +390,7 @@ GET /persona-manager/api/state
 
 ## 16. 版本与非目标
 
-当前版本 **0.1.2**（见 [CHANGELOG.md](CHANGELOG.md)）；已开源到 GitHub 并发布到 npm。
+当前版本 **0.1.3**（见 [CHANGELOG.md](CHANGELOG.md)）；已开源到 GitHub 并发布到 npm。
 
 v1 明确**不做**（详见契约第 1 节）：
 
